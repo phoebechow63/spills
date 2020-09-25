@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=utf-8 />
+        <title>US Spill Incidents</title>
+        <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' /> <!-- adjusts the screen width to the device accessing the web map -->
+        <script src="https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js"></script> <!-- sets up Mapbox GL JS -->
+        <link href="https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css" rel="stylesheet" /> <!-- sets up Mapbox GL JS -->
+        <!-- styles used-->
+        <style>
+            /*style for map*/
+            body { margin:0; padding:0; } 
+            .map { position:absolute; top:0; bottom:0; width:100%; }
+
+            /*style for map title header*/
+            .header {
+                background-color: #000d1a; 
+                font: 11.5px 'Calibri';
+                color: #eff3ff; 
+                position: absolute;
+                width: 100%;
+                height: 60px; 
+                z-index: 1;
+                opacity: 0.8; 
+            }
+
+            /*style for cluster option*/
+            .cluster-option {
+                background: #ff944e;
+                position: absolute;
+                z-index: 1;
+                top: 70px;
+                left: 10px;
+                border-radius: 3px;
+                width: 160px;
+                border: 1px solid grey; 
+                font-family: 'Open Sans', sans-serif;
+            }
+            .cluster-option a {
+                font-size: 13px;
+                color: #404040;
+                display: block;
+                margin: 0;
+                padding: 0;
+                padding: 10px;
+                text-decoration: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+                text-align: center;
+            }
+            .cluster-option a:last-child {
+                border: none;
+            }
+            .cluster-option a:hover {
+                background-color: #c44e00;
+                color: #404040;
+            }
+            .cluster-option a.active {
+                background-color: #ffd0b1
+                color: grey; 
+            }
+            .cluster-option a.active:hover {
+                background: #ffa062;
+            }
+
+            /*style for tech sector filter group*/
+            .filter-group {
+                font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+                background: #ffffff;
+                position: absolute;
+                z-index: 1;
+                top: 120px;
+                left: 10px;
+                border-radius: 3px;
+                width: 160px;
+                border: 1px solid rgba(0, 0, 0, 0.4);
+            }
+            .filter-group a {
+                font-size: 13px;
+                color: #404040;
+                display: block;
+                margin: 0;
+                padding: 0;
+                padding: 10px;
+                text-decoration: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+                text-align: center;
+            }
+            .filter-group a:last-child {
+                border: none;
+            }
+            .filter-group a:hover {
+                background-color: #c4e8ff;
+            }
+            .filter-group a.active {
+                background-color: #4292c6;
+                color: #ffffff;
+            }
+            .filter-group a.active:hover {
+                background: #084594;
+            }
+            
+            /*style for hover description display*/
+            .location-description {
+                position: absolute;
+                font-family: sans-serif;
+                margin-top: 5px;
+                margin-right: 5px;
+                right: 5px;
+                top: 64px;
+                padding: 5px;
+                width: 40%;
+                border: 2px solid grey;
+                font-size: 14px;
+                color: black;
+                background: rgba(0, 255, 255, 0.3);
+                border-radius: 3px;
+                overflow: auto;
+            }
+
+            /*style for choloropleth legend*/
+            .chloropleth-legend {
+                background-color: #fff;
+                border-radius: 3px;
+                bottom: 50px;
+                font: 12px/24px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+                padding: 15px;
+                position: absolute;
+                right: 10px;
+                z-index: 1;
+                opacity: 0.85; 
+                width: 120px;
+            }
+            .chloropleth-legend h4 {
+                margin: 0 0 10px;
+            }
+            .chloropleth-legend div span {
+                border-radius: 50%;
+                display: inline-block;
+                height: 10px;
+                margin-right: 5px;
+                width: 10px;
+            }
+            
+            /*style for tech sector legend*/
+            .sector-legend {
+                width: 160; 
+                background-color: #fff;
+                border-radius: 3px;
+                bottom: 50px;
+                font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+                padding: 10px;
+                position: absolute;
+                right: 170px;
+                z-index: 1;
+                opacity: 0.85;
+            }
+            .sector-legend h4 {
+                margin: 0 0 10px;
+            }
+            .sector-legend div span {
+                border-radius: 50%;
+                display: inline-block;
+                height: 10px;
+                margin-right: 5px;
+                width: 10px;
+            }
+
+            /*style for popup*/
+            .mapboxgl-popup {
+                max-width: 400px;
+                font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+                box-shadow: 3px 3px 2px #8B5D33;
+                background-color: #3887be;
+                border-color: #91785D;
+                color: grey; 
+                opacity: 0.9; 
+            }
+
+            /*style for popup*/
+            .reference {
+                position: absolute;
+                right: 0px;
+                bottom: 25px;
+                font: 12px 'Arial';
+                background-color: white; 
+                color: black; 
+                z-index: 1;
+                opacity: 0.5; 
+            }
+        </style>
+    </head>
+    <body>
+        <div id='map' class='map'> </div>
+        <div id = "header" class = "header">
+            <h1> &nbsp &nbsp Spill Incidents Across the US</h1> 
+        </div>
+        <nav id="cluster-option" class = "cluster-option"></nav>
+        <nav id="filter-group" class="filter-group"></nav>
+        <div id = "location-description" class="location-description">
+            <div><strong> ID: </strong><span id= 'id'></span></div>
+            <div><strong> Date: </strong><span id= 'date'></span></div>
+            <div><strong> Name: </strong><span id= 'name'></span></div>
+            <div><strong> Location: </strong></strong><span id= 'loc'></span></div>
+            <div><strong> Spill Type: </strong></strong><span id= 'threat'></span></div>
+            <div><strong> Commodity: </strong></strong><span id= 'comm'></span></div>
+            <div><strong> Max potential release (in gallons): </strong></strong><span id= 'max'></span></div>
+            <div><strong> Description: </strong></strong><span id= 'des'></span></div>
+        </div>
+        <div id="chloropleth-legend" class="chloropleth-legend">
+            <h4># of Incidents/State </h4>  <!-- Legend title -->
+            <div><span style="background-color: #eff3ff"></span>0 - 1</div> <!-- a 'subdivision showing a colored circle and then text describing it' -->
+            <div><span style="background-color: #c6dbef"></span>2 - 10</div>
+            <div><span style="background-color: #9ecae1"></span>11 - 20</div>
+            <div><span style="background-color: #6baed6"></span>21 - 36</div>
+            <div><span style="background-color: #4292c6"></span>36 - 327</div>
+        </div>
+        <div id="sector-legend" class="sector-legend">
+            <h4>Spill Type</h4>
+            <div><span style="background-color: #66c2a5"></span>Oil Spills</div>
+            <div><span style="background-color: #fc8d62"></span>Chemical Spills</div>
+            <div><span style="background-color: #8da0cb"></span>Other Spills</div>
+            <div><span style="background-color: #e78ac3"></span>Unclassified Spills</div>
+            </div>
+        <div id = "reference" class="reference">
+            <div> &nbsp Map Produced by: Phoebe Chow &nbsp</div>
+        </div>
+        <script src='./US-spill-incidents.js'></script>
+        <script src='./map.geojson'></script> 
+    </body>
+</html>
